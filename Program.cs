@@ -1,216 +1,126 @@
 ﻿using System;
-using System.Linq;
 
-class Program
+namespace zadacha4Avm
 {
-    static void Main()
+    class Program
     {
-        Console.WriteLine("решение слау\n");
-        double[,] mat = {
-            {4.8, 1, 1},
-            {1, 3.1, 1},
-            {1, 1, 5.3}
-        };
-        double[] right = { 1, 2, 3.2 };
-        Console.WriteLine("матрица а:");
-        ShowMat(mat);
-        Console.WriteLine("\nвектор f: [" + string.Join(", ", right) + "]");
-        bool symmetric = CheckSymmetric(mat);
-        Console.WriteLine($"\nматрица симметричная: {(symmetric ? "да" : "нет")}");
-        //гаусс
-        Console.WriteLine("\n" + new string('=', 40));
-        Console.WriteLine("гаусс");
-        Console.WriteLine(new string('=', 40));
-        double[] res1 = Gauss(mat, right);
-        Console.WriteLine("решение: " + FormatRes(res1));
-        ShowDiff(mat, res1, right);
-
-        //холецкий
-        Console.WriteLine("\n" + new string('=', 40));
-        Console.WriteLine("холецкий");
-        Console.WriteLine(new string('=', 40));
-
-        if (symmetric)
+       static double ResidualCalculate(double x, double y, double[,]Slau)
         {
-            double[] res2 = Hol(mat, right);
-            Console.WriteLine("решение: " + FormatRes(res2));
-            ShowDiff(mat, res2, right);
-
-            //проверка
-            Console.WriteLine("\n" + new string('=', 40));
-            Console.WriteLine("проверка");
-            Console.WriteLine(new string('=', 40));
-            CheckRes(mat, right, res1, res2);
+            return Math.Abs((Slau[0, 0] * x) + (Slau[0, 1] * y) - Slau[0, 2])
+                 + Math.Abs((Slau[1, 0] * x) + (Slau[1, 1] * y) - Slau[1, 2]);
         }
-        else
+        static double ZendelCalculation(double [,]Slau, double Epsilon1)
         {
-            Console.WriteLine("не симметричная");
-        }
-    }
-    //симметрия
-    static bool CheckSymmetric(double[,] a)
-    {
-        int n = a.GetLength(0);
-        for (int i = 0; i < n; i++)
-        {
-            for (int j = i + 1; j < n; j++)
+            double Bn1 = Slau[0, 2];
+            double Bn2 = Slau[1, 2];
+
+            double a11 = Slau[0, 0];
+            double a12 = Slau[0, 1];
+            double a21 = Slau[1, 0];
+            double a22 = Slau[1, 1];
+
+            double OldX = 0;
+            double OldY = 0;
+
+
+            double NewX = (Bn1 - a12 * OldY) / a11;
+            double NewY = (Bn2 - a21 * NewX) / a22;
+            int Iterations = 1;
+            Console.WriteLine("Норма невязки: " + ResidualCalculate(NewX, NewY, Slau));
+
+            while (Math.Abs(NewX - OldX) >= Epsilon1 || Math.Abs(NewY - OldY) >= Epsilon1)
             {
-                if (Math.Abs(a[i, j] - a[j, i]) > 1e-10)
-                {
-                    return false;
-                }
+                OldX = NewX;
+                OldY = NewY;
+                NewX = (Bn1 - a12 * OldY) / a11;
+                NewY = (Bn2 - a21 * NewX) / a22;
+
+                Console.WriteLine($"x = {NewX:F4}, y = {NewY:F4}");
+
+                Console.WriteLine("Норма невязки: " + ResidualCalculate(NewX, NewY, Slau));
+                Iterations++;
             }
+            Console.WriteLine($"Точность достигнута: x = {NewX}, y = {NewY}");
+            Console.WriteLine($"Количество итераций: = {Iterations} ");
+
+
+            return NewX;
         }
-        return true;
-    }
-    //krasata
-    static string FormatRes(double[] x)
-    {
-        return "[" + string.Join(", ", x.Select(val =>
-            Math.Abs(val) < 1e-10 ? "0" : val.ToString("F6"))) + "]";
-    }
-
-    //гаусс
-    static double[] Gauss(double[,] a, double[] b)
-    {
-        int n = b.Length;
-        double[,] m = new double[n, n + 1];
-
-        for (int i = 0; i < n; i++)
+        
+        static double JacobiCalculation(double[,] Slau, double Epsilon)
         {
-            for (int j = 0; j < n; j++)
-                m[i, j] = a[i, j];
-            m[i, n] = b[i];
-        }
-        for (int i = 0; i < n; i++)
-        {
-            double d = m[i, i];
-            for (int j = i; j <= n; j++)
-                m[i, j] /= d;
+           
+            double Bn1 = Slau[0, 2];
+            double Bn2 = Slau[1, 2];
 
-            for (int k = i + 1; k < n; k++)
+            double a11 = Slau[0, 0];
+            double a12 = Slau[0, 1];
+            double a21 = Slau[1, 0];
+            double a22 = Slau[1, 1];
+            
+            double OldX = 0;
+            double OldY = 0;
+
+            
+            double NewX = (Bn1 - a12 * OldY) / a11;
+            double NewY = (Bn2 - a21 * OldX) / a22;
+            int Iterations = 1;
+            Console.WriteLine("Норма невязки: " + ResidualCalculate(NewX, NewY, Slau));
+
+            while (Math.Abs(NewX - OldX) >= Epsilon || Math.Abs(NewY - OldY) >= Epsilon)
             {
-                double f = m[k, i];
-                for (int j = i; j <= n; j++)
-                    m[k, j] -= f * m[i, j];
+                OldX = NewX;
+                OldY = NewY;
+                NewX = (Bn1 - a12 * OldY) / a11;
+                NewY = (Bn2 - a21 * OldX) / a22;
+                
+                Console.WriteLine($"x = {NewX:F4}, y = {NewY:F4}");
+
+                Console.WriteLine("Норма невязки: " + ResidualCalculate(NewX,NewY,Slau));
+                Iterations++;
             }
-        }
-        double[] x = new double[n];
-        for (int i = n - 1; i >= 0; i--)
-        {
-            x[i] = m[i, n];
-            for (int j = i + 1; j < n; j++)
-                x[i] -= m[i, j] * x[j];
+            Console.WriteLine($"Точность достигнута: x = {NewX}, y = {NewY}");
+            Console.WriteLine($"Количество итераций: = {Iterations} ");
+
+
+            return NewX;
         }
 
-        return x;
-    }
-
-    //холецкий
-    static double[] Hol(double[,] a, double[] b)
-    {
-        int n = b.Length;
-        double[,] l = new double[n, n];
-
-        for (int i = 0; i < n; i++)
+        static double JacobiBuild(double[,] Slau)
         {
-            for (int j = 0; j <= i; j++)
+            double Epsilon = 0.0001;
+            double result = JacobiCalculation(Slau,Epsilon);
+            return result;
+        }
+      
+        static double ZendelBuild(double[,]Slau)
+        {
+            double Epsilon1 = 0.0001;
+            double  result1 = ZendelCalculation(Slau, Epsilon1);
+            return result1;
+        }
+
+        static void Main()
+        {
+            double[,] Slau = {
+                {10, 2, 3},
+                {2, 3, 5}
+            };
+
+            Console.WriteLine("Выберите метод:");
+            Console.WriteLine("1. Якоби");
+            Console.WriteLine("2. Зейделя");
+            int Choice = Convert.ToInt32(Console.ReadLine());
+
+            switch (Choice)
             {
-                double s = 0;
-                for (int k = 0; k < j; k++)
-                    s += l[i, k] * l[j, k];
-
-                if (i == j)
-                    l[i, j] = Math.Sqrt(a[i, i] - s);
-                else
-                    l[i, j] = (a[i, j] - s) / l[j, j];
+                case 1:
+                    double result = JacobiBuild(Slau);
+                    break;
+                case 2:
+                    double result1 = ZendelBuild(Slau);
+                    break;
             }
-        }
-
-        double[] y = new double[n];
-        for (int i = 0; i < n; i++)
-        {
-            double s = 0;
-            for (int j = 0; j < i; j++)
-                s += l[i, j] * y[j];
-            y[i] = (b[i] - s) / l[i, i];
-        }
-
-        double[] x = new double[n];
-        for (int i = n - 1; i >= 0; i--)
-        {
-            double s = 0;
-            for (int j = i + 1; j < n; j++)
-                s += l[j, i] * x[j];
-            x[i] = (y[i] - s) / l[i, i];
-        }
-
-        return x;
-    }
-
-    //невязка
-    static void ShowDiff(double[,] a, double[] x, double[] b)
-    {
-        int n = b.Length;
-        double[] r = new double[n];
-
-        for (int i = 0; i < n; i++)
-        {
-            double s = 0;
-            for (int j = 0; j < n; j++)
-                s += a[i, j] * x[j];
-            r[i] = s - b[i];
-        }
-
-        Console.WriteLine("невязка: " + FormatRes(r));
-        double norm = Math.Sqrt(r.Sum(val => val * val));
-        Console.WriteLine("норма: " + (norm < 1e-10 ? "~0" : norm.ToString("E2")));
-    }
-
-    //проверка
-    static void CheckRes(double[,] a, double[] b, double[] x1, double[] x2)
-    {
-        int n = b.Length;
-
-        Console.WriteLine("\nпроверка решений:\n");
-
-        for (int i = 0; i < n; i++)
-        {
-            double s1 = 0;
-            double s2 = 0;
-            for (int j = 0; j < n; j++)
-            {
-                s1 += a[i, j] * x1[j];
-                s2 += a[i, j] * x2[j];
-            }
-
-            Console.WriteLine($"уравнение {i + 1}:");
-            Console.WriteLine($"  гаусс:  {s1:F6} = {b[i]}");
-            Console.WriteLine($"  холецкий: {s2:F6} = {b[i]}");
-        }
-
-        bool same = true;
-        for (int i = 0; i < n; i++)
-        {
-            if (Math.Abs(x1[i] - x2[i]) > 1e-10)
-            {
-                same = false;
-                break;
-            }
-        }
-
-        Console.WriteLine($"\nсовпадение: {(same ? "да" : "нет")}");
-    }
-    //вывод матрицы
-    static void ShowMat(double[,] m)
-    {
-        int r = m.GetLength(0);
-        int c = m.GetLength(1);
-        for (int i = 0; i < r; i++)
-        {
-            for (int j = 0; j < c; j++)
-                Console.Write(m[i, j].ToString("F1") + "\t");
-            Console.WriteLine();
         }
     }
 }
